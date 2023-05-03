@@ -161,7 +161,6 @@ public class IssueMilestoneEditActivity extends BasePagerActivity implements
 
         mTitleView.setText(mMilestone.title());
         mDescriptionView.setText(mMilestone.description());
-        updateHighlightColor();
         updateLabels();
         setToolbarScrollable(false);
         adjustTabsForHeaderAlignedFab(true);
@@ -299,13 +298,6 @@ public class IssueMilestoneEditActivity extends BasePagerActivity implements
         ConfirmationDialogFragment.show(this, messageResId, buttonResId, data, "opencloseconfirm");
     }
 
-    private void updateHighlightColor() {
-        boolean closed = mMilestone.state() == IssueState.Closed;
-        transitionHeaderToColor(closed ? R.attr.colorIssueClosed : R.attr.colorIssueOpen,
-                closed ? R.attr.colorIssueClosedDark : R.attr.colorIssueOpenDark);
-        mSaveFab.setState(mMilestone.state());
-    }
-
     private void setDueOn(int year, int month, int day) {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.DAY_OF_MONTH, day);
@@ -406,7 +398,6 @@ public class IssueMilestoneEditActivity extends BasePagerActivity implements
                 .compose(RxUtils.wrapForBackgroundTask(this, dialogMessageResId, errorMessage))
                 .subscribe(result -> {
                     mMilestone = result;
-                    updateHighlightColor();
                     supportInvalidateOptionsMenu();
                     setResult(RESULT_OK);
                 }, error -> handleActionFailure("Updating milestone failed", error));

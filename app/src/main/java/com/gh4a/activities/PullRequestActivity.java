@@ -22,6 +22,22 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+
+import com.gh4a.utils.ActivityResultHelpers;
+import com.gh4a.utils.UiUtils;
+import com.google.android.material.appbar.AppBarLayout;
+
+import androidx.appcompat.view.ContextThemeWrapper;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,16 +57,14 @@ import com.gh4a.fragment.CommitCompareFragment;
 import com.gh4a.fragment.ConfirmationDialogFragment;
 import com.gh4a.fragment.PullRequestConversationFragment;
 import com.gh4a.fragment.PullRequestFilesFragment;
-import com.gh4a.utils.ActivityResultHelpers;
 import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.IntentUtils;
 import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.SingleFactory;
 import com.gh4a.utils.Triplet;
-import com.gh4a.utils.UiUtils;
 import com.gh4a.widget.BottomSheetCompatibleScrollingViewBehavior;
 import com.gh4a.widget.IssueStateTrackingFloatingActionButton;
-import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputLayout;
 import com.meisolsson.githubsdk.model.Issue;
 import com.meisolsson.githubsdk.model.IssueState;
@@ -67,16 +81,6 @@ import com.meisolsson.githubsdk.service.pull_request.PullRequestService;
 
 import java.util.Locale;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.view.ContextThemeWrapper;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.Fragment;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 
@@ -129,7 +133,6 @@ public class PullRequestActivity extends BaseFragmentPagerActivity implements
     private boolean mPendingReviewLoaded;
 
     private ViewGroup mHeader;
-    private int[] mHeaderColorAttrs;
 
     private final ActivityResultLauncher<Intent> mCreateReviewLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -283,7 +286,6 @@ public class PullRequestActivity extends BaseFragmentPagerActivity implements
             mEditFab.post(this::updateFabVisibility);
         }
         mHeader.setVisibility(View.GONE);
-        mHeaderColorAttrs = null;
         load(true);
         loadPendingReview(true);
         invalidateTabs();
@@ -294,11 +296,6 @@ public class PullRequestActivity extends BaseFragmentPagerActivity implements
     @Override
     protected int[] getTabTitleResIds() {
         return mPullRequest != null && mIssue != null && mIsCollaborator != null ? TITLES : null;
-    }
-
-    @Override
-    protected int[] getHeaderColorAttrs() {
-        return mHeaderColorAttrs;
     }
 
     @Override
@@ -417,24 +414,12 @@ public class PullRequestActivity extends BaseFragmentPagerActivity implements
 
         if (mPullRequest.merged()) {
             stateTextResId = R.string.pull_request_merged;
-            mHeaderColorAttrs = new int[] {
-                R.attr.colorPullRequestMerged, R.attr.colorPullRequestMergedDark
-            };
         } else if (mPullRequest.state() == IssueState.Closed) {
             stateTextResId = R.string.closed;
-            mHeaderColorAttrs = new int[] {
-                R.attr.colorIssueClosed, R.attr.colorIssueClosedDark
-            };
         } else if (mPullRequest.draft()) {
             stateTextResId = R.string.draft;
-            mHeaderColorAttrs = new int[] {
-                R.attr.colorPullRequestDraft, R.attr.colorPullRequestDraftDark
-            };
         } else {
             stateTextResId = R.string.open;
-            mHeaderColorAttrs = new int[] {
-                R.attr.colorIssueOpen, R.attr.colorIssueOpenDark
-            };
         }
 
         TextView tvState = mHeader.findViewById(R.id.tv_state);
@@ -442,6 +427,7 @@ public class PullRequestActivity extends BaseFragmentPagerActivity implements
 
         TextView tvTitle = mHeader.findViewById(R.id.tv_title);
         tvTitle.setText(mPullRequest.title());
+        tvTitle.setSelected(true);
 
         mHeader.setVisibility(View.VISIBLE);
     }
@@ -461,7 +447,6 @@ public class PullRequestActivity extends BaseFragmentPagerActivity implements
         }
         fillHeader();
         updateFabVisibility();
-        transitionHeaderToColor(mHeaderColorAttrs[0], mHeaderColorAttrs[1]);
         supportInvalidateOptionsMenu();
     }
 
@@ -606,7 +591,7 @@ public class PullRequestActivity extends BaseFragmentPagerActivity implements
             setupMergeMethodSpinner();
 
             final PullRequestActivity activity = (PullRequestActivity) getContext();
-            return new AlertDialog.Builder(activity)
+            return new MaterialAlertDialogBuilder(activity)
                     .setTitle(getString(R.string.pull_message_dialog_title, mPr.number()))
                     .setView(view)
                     .setPositiveButton(R.string.pull_request_merge, (dialog, which) -> {

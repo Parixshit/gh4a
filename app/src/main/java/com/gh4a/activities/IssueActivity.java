@@ -181,14 +181,11 @@ public class IssueActivity extends BaseActivity implements
         TextView tvState = mHeader.findViewById(R.id.tv_state);
         boolean closed = mIssue.state() == IssueState.Closed;
         int stateTextResId = closed ? R.string.closed : R.string.open;
-        int stateColorAttributeId = closed ? R.attr.colorIssueClosed : R.attr.colorIssueOpen;
-
         tvState.setText(getString(stateTextResId).toUpperCase(Locale.getDefault()));
-        transitionHeaderToColor(stateColorAttributeId,
-                closed ? R.attr.colorIssueClosedDark : R.attr.colorIssueOpenDark);
 
         TextView tvTitle = mHeader.findViewById(R.id.tv_title);
         tvTitle.setText(mIssue.title());
+        tvTitle.setSelected(true);
 
         mHeader.setVisibility(View.VISIBLE);
     }
@@ -266,7 +263,6 @@ public class IssueActivity extends BaseActivity implements
         mIsCollaborator = null;
         setContentShown(false);
 
-        transitionHeaderToColor(R.attr.colorPrimary, R.attr.colorPrimaryDark);
         mHeader.setVisibility(View.GONE);
 
         if (mFragment != null) {
